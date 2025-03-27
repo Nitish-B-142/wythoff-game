@@ -104,7 +104,7 @@ function playerMove(type) {
     addMoveHistory("Player", gameData.first, gameData.second);
     checkGameStatus();
     disableButtons();
-    setTimeout(aiMove, 200);
+    setTimeout(aiMove, 100);
 }
 
 function aiMove() {
@@ -120,7 +120,7 @@ function aiMove() {
 
 function checkGameStatus() {
     if (gameData.first === 0 && gameData.second === 0) {
-        let winner = gameData.turn % 2 === 0 ? "Player Wins!" : "AI Wins!";
+        let winner = gameData.turn % 2 !== 0 ? "Player Wins!" : "AI Wins!";
         displayMessage("Game Over! " + winner);
         if (gameData.turn % 2 !== 0) gameData.losingStreak++;
         else gameData.losingStreak = 0;
@@ -141,8 +141,8 @@ function addMoveHistory(player, first, second) {
 function findBestMove(a, b) {
     if (isWinningPosition(a, b)) return [1, 1];
     let goldenRatio = (1 + Math.sqrt(5)) / 2;
-    let targetA = Math.floor(b * goldenRatio);
-    let targetB = Math.floor(a * goldenRatio);
+    let targetA = Math.floor(b / goldenRatio);
+    let targetB = Math.floor(a / goldenRatio);
     if (targetA <= a) return [a - targetA, 0];
     if (targetB <= b) return [0, b - targetB];
     return [1, 1];
@@ -150,7 +150,7 @@ function findBestMove(a, b) {
 
 function isWinningPosition(a, b) {
     let goldenRatio = (1 + Math.sqrt(5)) / 2;
-    let n = Math.floor(a * goldenRatio);
+    let n = Math.floor(a / goldenRatio);
     return n === b;
 }
 
