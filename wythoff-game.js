@@ -41,6 +41,7 @@ function resetGame() {
         losingStreak: parseInt(localStorage.getItem("losingStreak")) || 0
     };
     updateDisplay();
+    enableButtons();
 }
 
 function getRandomStart() {
@@ -75,6 +76,7 @@ function playerMove(type) {
     
     addMoveHistory("Player", gameData.first, gameData.second);
     checkGameStatus();
+    disableButtons();
     setTimeout(aiMove, 500);
 }
 
@@ -86,14 +88,17 @@ function aiMove() {
     gameData.second -= bestMove[1];
     addMoveHistory("AI", gameData.first, gameData.second);
     checkGameStatus();
+    enableButtons();
 }
 
 function checkGameStatus() {
     if (gameData.first === 0 && gameData.second === 0) {
-        displayMessage("Game Over! " + (gameData.turn % 2 === 0 ? "Player Wins!" : "AI Wins!"));
+        let winner = gameData.turn % 2 === 0 ? "Player Wins!" : "AI Wins!";
+        displayMessage("Game Over! " + winner);
         if (gameData.turn % 2 !== 0) gameData.losingStreak++;
         else gameData.losingStreak = 0;
         localStorage.setItem("losingStreak", gameData.losingStreak);
+        disableButtons();
     }
     updateDisplay();
     gameData.turn++;
@@ -135,4 +140,12 @@ function increaseInput() {
 function decreaseInput() {
     let input = document.getElementById("input-number");
     if (parseInt(input.value) > 1) input.value = parseInt(input.value) - 1;
+}
+
+function disableButtons() {
+    document.querySelectorAll("button").forEach(btn => btn.disabled = true);
+}
+
+function enableButtons() {
+    document.querySelectorAll("button").forEach(btn => btn.disabled = false);
 }
