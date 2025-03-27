@@ -110,7 +110,7 @@ function playerMove(action) {
         enableButtons();
         return;
     }
-    if ((action !== "reduceBoth" && input > num1 && input > num2) || (action === "reduceBoth" && (input > num1 || input > num2))) {
+    if ((action !== "reduceBoth" && input > Math.min(num1, num2)) || (action === "reduceBoth" && (input > num1 || input > num2))) {
         document.getElementById("cheatMessage").style.display = "block";
         setTimeout(() => {
             document.getElementById("cheatMessage").style.display = "none";
@@ -129,7 +129,7 @@ function playerMove(action) {
     logMove("Player", num1, num2);
     updateUI();
     checkWin();
-    if (!gameOver) setTimeout(aiMove, 500);
+    if (!gameOver) setTimeout(() => { aiMove(); enableButtons(); }, 500);
 }
 
 function checkWin() {
