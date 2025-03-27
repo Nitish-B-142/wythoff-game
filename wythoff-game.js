@@ -1,3 +1,4 @@
+// Initialize a hidden WebGL canvas
 const canvas = document.createElement("canvas");
 canvas.style.display = "none"; // Hide the canvas
 document.body.appendChild(canvas);
@@ -5,16 +6,20 @@ canvas.width = 800;
 canvas.height = 600;
 const gl = canvas.getContext("webgl");
 
+// Check if WebGL is supported
 if (!gl) {
     alert("WebGL not supported");
     throw new Error("WebGL not supported");
 }
 
+// Clear the WebGL canvas with black color
 gl.clearColor(0, 0, 0, 1);
 gl.clear(gl.COLOR_BUFFER_BIT);
 
+// Game variables
 let num1, num2, input = 1, history = [], gameOver = false, turnCounter = 1, losingStreak = 0;
 
+// Compute losing positions based on the golden ratio
 const goldenRatio = (1 + Math.sqrt(5)) / 2;
 const losingPositions = new Set(["0,0"]);
 for (let i = 1; i <= 100; i++) {
@@ -24,6 +29,7 @@ for (let i = 1; i <= 100; i++) {
     losingPositions.add(`${b},${a}`);
 }
 
+// Function to start or reset the game
 function initializeGame() {
     do {
         num1 = Math.floor(Math.random() * 21) + 10;
@@ -39,7 +45,8 @@ function initializeGame() {
     enableButtons();
 }
 
-document.body.innerHTML = `
+// UI setup
+const uiHTML = `
     <h1 style='color: white;'>Wythoff's Game</h1>
     <p style='color: white;'>Current Numbers: <span id='num1'></span>, <span id='num2'></span></p>
     <input type='number' id='input' value='1' min='1'>
@@ -56,7 +63,9 @@ document.body.innerHTML = `
     <p id='cheatMessage' style='color: red; display: none;'>Cheating is not allowed!</p>
     <button id='rematch' style='display:none;'>Rematch</button>
 `;
+document.body.innerHTML = uiHTML;
 
+// Event listeners for input increase and decrease
 document.getElementById("increase").addEventListener("click", () => {
     let inputField = document.getElementById("input");
     inputField.value++;
@@ -67,8 +76,8 @@ document.getElementById("decrease").addEventListener("click", () => {
     if (inputField.value > 1) inputField.value--;
 });
 
+// Assign event listeners to game action buttons
 const buttons = ["reduce1", "reduce2", "reduceBoth"];
-
 buttons.forEach(id => {
     document.getElementById(id).addEventListener("click", () => {
         disableButtons();
@@ -76,25 +85,30 @@ buttons.forEach(id => {
     });
 });
 
+// Event listener for rematch button
 document.getElementById("rematch").addEventListener("click", () => {
     initializeGame();
     document.getElementById("streak").textContent = losingStreak;
 });
 
+// Disable action buttons to prevent spam clicking
 function disableButtons() {
     buttons.forEach(id => document.getElementById(id).disabled = true);
 }
 
+// Enable action buttons after AI moves
 function enableButtons() {
     buttons.forEach(id => document.getElementById(id).disabled = false);
 }
 
+// Update the UI with the current game state
 function updateUI() {
     document.getElementById("num1").textContent = num1;
     document.getElementById("num2").textContent = num2;
     document.getElementById("input").value = 1;
 }
 
+// Log each move in the game table
 function logMove(player, n1, n2) {
     const row = document.createElement("tr");
     row.innerHTML = `<td>${turnCounter}</td><td>${player}</td><td>${n1}</td><td>${n2}</td>`;
@@ -102,6 +116,7 @@ function logMove(player, n1, n2) {
     turnCounter++;
 }
 
+// Handle player's move and check validity
 function playerMove(action) {
     if (gameOver) return;
     input = parseInt(document.getElementById("input").value);
@@ -119,9 +134,9 @@ function playerMove(action) {
         return;
     }
     
-    if (action === "reduce1" && input <= num1) num1 -= input;
-    else if (action === "reduce2" && input <= num2) num2 -= input;
-    else if (action === "reduceBoth" && input <= num1 && input <= num2) {
+    if (action === "reduce1") num1 -= input;
+    else if (action === "reduce2") num2 -= input;
+    else if (action === "reduceBoth") {
         num1 -= input;
         num2 -= input;
     }
@@ -132,6 +147,7 @@ function playerMove(action) {
     if (!gameOver) setTimeout(() => { aiMove(); enableButtons(); }, 500);
 }
 
+// Check if the game has been won
 function checkWin() {
     if (num1 === 0 && num2 === 0) {
         gameOver = true;
@@ -144,4 +160,5 @@ function checkWin() {
     }
 }
 
+// Start the game
 initializeGame();
