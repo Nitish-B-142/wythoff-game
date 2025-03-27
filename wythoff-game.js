@@ -144,7 +144,10 @@ function playerMove(action) {
     logMove("Player", num1, num2);
     updateUI();
     checkWin();
-    if (!gameOver) setTimeout(() => { aiMove(); enableButtons(); }, 500);
+    if (!gameOver) {
+        aiMove();
+        enableButtons();
+    }
 }
 
 // Check if the game has been won
