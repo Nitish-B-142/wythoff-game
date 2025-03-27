@@ -103,8 +103,13 @@ function logMove(player, n1, n2) {
 function playerMove(action) {
     if (gameOver) return;
     input = parseInt(document.getElementById("input").value);
-    
-    if ((action === "reduce1" && input > num1) || (action === "reduce2" && input > num2) || (action === "reduceBoth" && (input > num1 || input > num2))) {
+    if (isNaN(input) || input < 1) {
+        alert("Invalid input! Please enter a natural number greater than zero.");
+        enableButtons();
+        return;
+    }
+    if ((action !== "reduceBoth" && input > Math.max(num1, num2)) || (action === "reduceBoth" && (input > num1 || input > num2))) {
+        alert("Input too large!");
         enableButtons();
         return;
     }
@@ -122,37 +127,6 @@ function playerMove(action) {
     if (!gameOver) setTimeout(aiMove, 500);
 }
 
-function aiMove() {
-    if (gameOver) return;
-    let moveMade = false;
-    for (let i = 1; i <= Math.max(num1, num2); i++) {
-        if (num1 >= i && losingPositions.has(`${num1 - i},${num2}`)) {
-            num1 -= i;
-            moveMade = true;
-            break;
-        }
-        if (num2 >= i && losingPositions.has(`${num1},${num2 - i}`)) {
-            num2 -= i;
-            moveMade = true;
-            break;
-        }
-        if (num1 >= i && num2 >= i && losingPositions.has(`${num1 - i},${num2 - i}`)) {
-            num1 -= i;
-            num2 -= i;
-            moveMade = true;
-            break;
-        }
-    }
-    if (!moveMade) {
-        num1 = Math.max(0, num1 - 1);
-        num2 = Math.max(0, num2 - 1);
-    }
-    logMove("AI", num1, num2);
-    updateUI();
-    checkWin();
-    enableButtons();
-}
-
 function checkWin() {
     if (num1 === 0 && num2 === 0) {
         gameOver = true;
@@ -164,5 +138,5 @@ function checkWin() {
         document.getElementById("streak").textContent = losingStreak;
     }
 }
-
+/// Comment ho
 initializeGame();
