@@ -53,6 +53,7 @@ document.body.innerHTML = `
     <table border='1' style='color: white;'><thead><tr><th>Turn</th><th>Player</th><th>Num1</th><th>Num2</th></tr></thead><tbody id='log'></tbody></table>
     <p style='color: white;'>Losing Streak: <span id='streak'>0</span></p>
     <p id='winnerMessage' style='color: yellow; display: none;'></p>
+    <p id='cheatMessage' style='color: red; display: none;'>Cheating is not allowed!</p>
     <button id='rematch' style='display:none;'>Rematch</button>
 `;
 
@@ -91,6 +92,7 @@ function enableButtons() {
 function updateUI() {
     document.getElementById("num1").textContent = num1;
     document.getElementById("num2").textContent = num2;
+    document.getElementById("input").value = 1;
 }
 
 function logMove(player, n1, n2) {
@@ -108,15 +110,18 @@ function playerMove(action) {
         enableButtons();
         return;
     }
-    if ((action !== "reduceBoth" && input > Math.max(num1, num2)) || (action === "reduceBoth" && (input > num1 || input > num2))) {
-        alert("Input too large!");
+    if ((action !== "reduceBoth" && input > num1 && input > num2) || (action === "reduceBoth" && (input > num1 || input > num2))) {
+        document.getElementById("cheatMessage").style.display = "block";
+        setTimeout(() => {
+            document.getElementById("cheatMessage").style.display = "none";
+        }, 2000);
         enableButtons();
         return;
     }
     
-    if (action === "reduce1") num1 -= input;
-    else if (action === "reduce2") num2 -= input;
-    else if (action === "reduceBoth") {
+    if (action === "reduce1" && input <= num1) num1 -= input;
+    else if (action === "reduce2" && input <= num2) num2 -= input;
+    else if (action === "reduceBoth" && input <= num1 && input <= num2) {
         num1 -= input;
         num2 -= input;
     }
@@ -131,12 +136,12 @@ function checkWin() {
     if (num1 === 0 && num2 === 0) {
         gameOver = true;
         document.getElementById("rematch").style.display = "block";
-        const winner = (turnCounter % 2 === 1) ? "AI Wins!" : "Player Wins!";
+        const winner = (turnCounter % 2 === 0) ? "AI Wins!" : "Player Wins!";
         document.getElementById("winnerMessage").textContent = winner;
         document.getElementById("winnerMessage").style.display = "block";
         losingStreak = (winner === "AI Wins!") ? losingStreak + 1 : 0;
         document.getElementById("streak").textContent = losingStreak;
     }
 }
-/// Comment ho
+
 initializeGame();
