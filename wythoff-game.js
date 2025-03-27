@@ -1,6 +1,5 @@
-// Wythoff's Game - Improved Structure with Better Rendering
+// Wythoff's Game - Improved AI, UI Enhancements, and Robust Error Handling
 
-// Ensure the document is fully loaded before execution
 window.onload = function() {
     initializeGame();
 };
@@ -24,10 +23,38 @@ function createUI() {
         </div>
         <div id="message"></div>
         <button onclick="resetGame()">Rematch</button>
-        <table id="move-history">
-            <tr><th>Turn</th><th>Player</th><th>Numbers</th></tr>
-        </table>
         <p>Losing Streak: <span id="losing-streak">0</span></p>
+        
+        <table id="move-history">
+            <thead>
+                <tr>
+                    <th>Turn</th>
+                    <th>Player</th>
+                    <th>Numbers</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+        
+        <style>
+            #move-history {
+                width: 50%;
+                margin: 10px auto;
+                border-collapse: collapse;
+            }
+            #move-history th, #move-history td {
+                border: 1px solid white;
+                padding: 8px;
+                text-align: center;
+            }
+            #move-history th {
+                background: #333;
+            }
+            button:disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
+            }
+        </style>
     `;
 }
 
@@ -59,7 +86,7 @@ function updateDisplay() {
 
 function playerMove(type) {
     let num = parseInt(document.getElementById("input-number").value);
-    if (num <= 0 || num > Math.max(gameData.first, gameData.second)) {
+    if (!Number.isInteger(num) || num <= 0 || num > Math.max(gameData.first, gameData.second)) {
         displayMessage("Invalid move!", true);
         return;
     }
@@ -77,7 +104,7 @@ function playerMove(type) {
     addMoveHistory("Player", gameData.first, gameData.second);
     checkGameStatus();
     disableButtons();
-    setTimeout(aiMove, 500);
+    setTimeout(aiMove, 200);
 }
 
 function aiMove() {
@@ -105,9 +132,10 @@ function checkGameStatus() {
 }
 
 function addMoveHistory(player, first, second) {
-    let table = document.getElementById("move-history");
-    let row = table.insertRow();
+    let table = document.querySelector("#move-history tbody");
+    let row = document.createElement("tr");
     row.innerHTML = `<td>${gameData.turn}</td><td>${player}</td><td>${first}, ${second}</td>`;
+    table.appendChild(row);
 }
 
 function findBestMove(a, b) {
