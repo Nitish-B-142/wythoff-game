@@ -1,100 +1,138 @@
-document.addEventListener("DOMContentLoaded", () => {
-    let gameState = {
-        num1: getRandomNonWinningNumber(),
-        num2: getRandomNonWinningNumber(),
-        playerTurn: true,
-        losingStreak: 0,
-        turnHistory: []
+// Wythoff's Game - Improved Structure with Better Rendering
+
+// Ensure the document is fully loaded before execution
+window.onload = function() {
+    initializeGame();
+};
+
+function initializeGame() {
+    createUI();
+    resetGame();
+}
+
+function createUI() {
+    document.body.innerHTML = `
+        <h1>Wythoff's Game</h1>
+        <div id="game-container">
+            <p>Current Numbers: <span id="current-numbers"></span></p>
+            <input type="number" id="input-number" min="1" value="1">
+            <button onclick="increaseInput()">+</button>
+            <button onclick="decreaseInput()">-</button>
+            <button onclick="playerMove(1)">Reduce First</button>
+            <button onclick="playerMove(2)">Reduce Second</button>
+            <button onclick="playerMove(3)">Reduce Both</button>
+        </div>
+        <div id="message"></div>
+        <button onclick="resetGame()">Rematch</button>
+        <table id="move-history">
+            <tr><th>Turn</th><th>Player</th><th>Numbers</th></tr>
+        </table>
+        <p>Losing Streak: <span id="losing-streak">0</span></p>
+    `;
+}
+
+let gameData;
+
+function resetGame() {
+    gameData = {
+        first: getRandomStart(),
+        second: getRandomStart(),
+        turn: 1,
+        losingStreak: parseInt(localStorage.getItem("losingStreak")) || 0
     };
-    
-    const num1Display = document.getElementById("num1");
-    const num2Display = document.getElementById("num2");
-    const inputField = document.getElementById("moveValue");
-    const messageBox = document.getElementById("message");
-    const historyTable = document.getElementById("history");
-    const streakDisplay = document.getElementById("losingStreak");
-    const buttons = document.querySelectorAll(".move-btn");
-    
-    function updateUI() {
-        num1Display.textContent = gameState.num1;
-        num2Display.textContent = gameState.num2;
-        streakDisplay.textContent = gameState.losingStreak;
+    updateDisplay();
+}
+
+function getRandomStart() {
+    let num;
+    do {
+        num = Math.floor(Math.random() * 21) + 10;
+    } while (isWinningPosition(num, num));
+    return num;
+}
+
+function updateDisplay() {
+    document.getElementById("current-numbers").textContent = `${gameData.first}, ${gameData.second}`;
+    document.getElementById("losing-streak").textContent = gameData.losingStreak;
+}
+
+function playerMove(type) {
+    let num = parseInt(document.getElementById("input-number").value);
+    if (num <= 0 || num > Math.max(gameData.first, gameData.second)) {
+        displayMessage("Invalid move!", true);
+        return;
     }
     
-    function disableButtons(disable) {
-        buttons.forEach(btn => btn.disabled = disable);
+    if (type === 1 && gameData.first >= num) gameData.first -= num;
+    else if (type === 2 && gameData.second >= num) gameData.second -= num;
+    else if (type === 3 && gameData.first >= num && gameData.second >= num) {
+        gameData.first -= num;
+        gameData.second -= num;
+    } else {
+        displayMessage("Invalid move!", true);
+        return;
     }
     
-    function getRandomNonWinningNumber() {
-        let n;
-        do {
-            n = Math.floor(Math.random() * 21) + 10;
-        } while (isWinningPosition(n, n));
-        return n;
+    addMoveHistory("Player", gameData.first, gameData.second);
+    checkGameStatus();
+    setTimeout(aiMove, 500);
+}
+
+function aiMove() {
+    if (gameData.first === 0 && gameData.second === 0) return;
+    
+    let bestMove = findBestMove(gameData.first, gameData.second);
+    gameData.first -= bestMove[0];
+    gameData.second -= bestMove[1];
+    addMoveHistory("AI", gameData.first, gameData.second);
+    checkGameStatus();
+}
+
+function checkGameStatus() {
+    if (gameData.first === 0 && gameData.second === 0) {
+        displayMessage("Game Over! " + (gameData.turn % 2 === 0 ? "Player Wins!" : "AI Wins!"));
+        if (gameData.turn % 2 !== 0) gameData.losingStreak++;
+        else gameData.losingStreak = 0;
+        localStorage.setItem("losingStreak", gameData.losingStreak);
     }
-    
-    function isWinningPosition(a, b) {
-        const phi = (1 + Math.sqrt(5)) / 2;
-        let winningX = Math.floor(b - a * phi) === 0;
-        let winningY = Math.floor(a - b * phi) === 0;
-        return winningX || winningY;
-    }
-    
-    function makeMove(reduceFirst, reduceSecond) {
-        let moveValue = parseInt(inputField.value, 10);
-        if (moveValue <= 0 || isNaN(moveValue) || 
-            (reduceFirst && moveValue > gameState.num1) || 
-            (reduceSecond && moveValue > gameState.num2)) {
-            messageBox.textContent = "Invalid move!";
-            return;
-        }
-        
-        if (reduceFirst) gameState.num1 -= moveValue;
-        if (reduceSecond) gameState.num2 -= moveValue;
-        gameState.turnHistory.push({ turn: "Player", num1: gameState.num1, num2: gameState.num2 });
-        disableButtons(true);
-        updateUI();
-        setTimeout(aiMove, 500);
-    }
-    
-    function aiMove() {
-        if (gameState.num1 === 0 && gameState.num2 === 0) {
-            messageBox.textContent = "Player Wins!";
-            gameState.losingStreak = 0;
-            return;
-        }
-        
-        if (!isWinningPosition(gameState.num1, gameState.num2)) {
-            let moveValue = Math.min(gameState.num1, gameState.num2);
-            gameState.num1 -= moveValue;
-            gameState.num2 -= moveValue;
-        } else {
-            gameState.num1 = Math.max(0, gameState.num1 - 1);
-            gameState.num2 = Math.max(0, gameState.num2 - 1);
-        }
-        
-        gameState.turnHistory.push({ turn: "AI", num1: gameState.num1, num2: gameState.num2 });
-        updateUI();
-        disableButtons(false);
-        
-        if (gameState.num1 === 0 && gameState.num2 === 0) {
-            messageBox.textContent = "AI Wins!";
-            gameState.losingStreak++;
-        }
-    }
-    
-    document.getElementById("reduceNum1").addEventListener("click", () => makeMove(true, false));
-    document.getElementById("reduceNum2").addEventListener("click", () => makeMove(false, true));
-    document.getElementById("reduceBoth").addEventListener("click", () => makeMove(true, true));
-    
-    document.getElementById("rematch").addEventListener("click", () => {
-        gameState.num1 = getRandomNonWinningNumber();
-        gameState.num2 = getRandomNonWinningNumber();
-        gameState.turnHistory = [];
-        messageBox.textContent = "";
-        disableButtons(false);
-        updateUI();
-    });
-    
-    updateUI();
-});
+    updateDisplay();
+    gameData.turn++;
+}
+
+function addMoveHistory(player, first, second) {
+    let table = document.getElementById("move-history");
+    let row = table.insertRow();
+    row.innerHTML = `<td>${gameData.turn}</td><td>${player}</td><td>${first}, ${second}</td>`;
+}
+
+function findBestMove(a, b) {
+    if (isWinningPosition(a, b)) return [1, 1];
+    let goldenRatio = (1 + Math.sqrt(5)) / 2;
+    let targetA = Math.floor(b * goldenRatio);
+    let targetB = Math.floor(a * goldenRatio);
+    if (targetA <= a) return [a - targetA, 0];
+    if (targetB <= b) return [0, b - targetB];
+    return [1, 1];
+}
+
+function isWinningPosition(a, b) {
+    let goldenRatio = (1 + Math.sqrt(5)) / 2;
+    let n = Math.floor(a * goldenRatio);
+    return n === b;
+}
+
+function displayMessage(text, temporary = false) {
+    let msg = document.getElementById("message");
+    msg.textContent = text;
+    if (temporary) setTimeout(() => msg.textContent = "", 2000);
+}
+
+function increaseInput() {
+    let input = document.getElementById("input-number");
+    input.value = parseInt(input.value) + 1;
+}
+
+function decreaseInput() {
+    let input = document.getElementById("input-number");
+    if (parseInt(input.value) > 1) input.value = parseInt(input.value) - 1;
+}
