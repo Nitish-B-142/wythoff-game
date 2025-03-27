@@ -116,40 +116,6 @@ function logMove(player, n1, n2) {
     turnCounter++;
 }
 
-// Handle player's move and check validity
-function playerMove(action) {
-    if (gameOver) return;
-    input = parseInt(document.getElementById("input").value);
-    if (isNaN(input) || input < 1) {
-        alert("Invalid input! Please enter a natural number greater than zero.");
-        enableButtons();
-        return;
-    }
-    if ((action !== "reduceBoth" && input > Math.min(num1, num2)) || (action === "reduceBoth" && (input > num1 || input > num2))) {
-        document.getElementById("cheatMessage").style.display = "block";
-        setTimeout(() => {
-            document.getElementById("cheatMessage").style.display = "none";
-        }, 2000);
-        enableButtons();
-        return;
-    }
-    
-    if (action === "reduce1") num1 -= input;
-    else if (action === "reduce2") num2 -= input;
-    else if (action === "reduceBoth") {
-        num1 -= input;
-        num2 -= input;
-    }
-    
-    logMove("Player", num1, num2);
-    updateUI();
-    checkWin();
-    if (!gameOver) {
-        aiMove();
-        enableButtons();
-    }
-}
-
 // Check if the game has been won
 function checkWin() {
     if (num1 === 0 && num2 === 0) {
@@ -160,6 +126,19 @@ function checkWin() {
         document.getElementById("winnerMessage").style.display = "block";
         losingStreak = (winner === "AI Wins!") ? losingStreak + 1 : 0;
         document.getElementById("streak").textContent = losingStreak;
+    }
+}
+
+// Ensure AI always makes a move function aiMove() {
+function aiMove() {
+    if (!gameOver) {
+        let move = Math.min(num1, num2, Math.floor(Math.random() * 5) + 1);
+        num1 -= move;
+        num2 -= move;
+        logMove("AI", num1, num2);
+        updateUI();
+        checkWin();
+        enableButtons();
     }
 }
 
